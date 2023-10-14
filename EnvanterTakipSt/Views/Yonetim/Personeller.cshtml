@@ -1,0 +1,168 @@
+﻿@{
+	ViewData["Title"] = "Personeller";
+}
+
+<div class="pagetitle">
+	<h1>Personeller</h1>
+	<nav>
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item"><a href="anasayfa.html">Anasayfa</a></li>
+			<li class="breadcrumb-item active">Personeller</li>
+		</ol>
+	</nav>
+</div><!-- End Page Title -->
+
+<section class="section dashboard">
+	<div class="row">
+
+		<!-- Left side columns -->
+		<div class="col-lg-12">
+			<div class="row">
+				<div class="card">
+					<div class="card-body">
+						<table id="example" class="table" style="width:100%;">
+							<thead>
+								<tr>
+									<th>Id</th>
+									<th>Adı</th>
+									<th>Soyadı</th>
+									<th>Telefon No</th>
+									<th>Departman</th>
+									<th>Çalışan Durumu</th>
+									<th style="width: 25%;">İşlemler</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div><!-- End Left side columns -->
+
+	</div>
+</section>
+
+@section Scripts
+	{
+	<script>
+		function ekle() {
+			$.get("@Url.Action("GetDepartmanlar", "Api")", function(data, status) {
+                var options = "<option value='' disabled selected>Departman Seçiniz</option>";
+				data.forEach(function(suan, index){
+					options += "<option value='"+suan.departmanId+"'>"+suan.departmanAdi+"</option>"
+				})
+				Swal.fire({
+					html: "<div class='col-sm-10'><input type='text' class='form-control' placeholder='Ad' id='ad' style='width: 454px;'><br><input type='text' class='form-control' placeholder='Soyad' id='soyad' style='width: 454px;'><br><input type='text' class='form-control' placeholder='Telefon no' id='numara' style='width: 454px;'><br><select class='form-select' name='departman' id='departman' style='width: 454px;'>"+options+"</select></div>",
+					confirmButtonText: 'Ekle',
+					denyButtonText: 'Vazgeç',
+					showDenyButton: true,
+				}).then((result) => {
+					if (result.isConfirmed) {
+						var ad = $('#ad').val();
+						var soyad = $('#soyad').val();
+						var numara = $('#numara').val();
+						var departman = $('#departman').val();
+						if (ad === '' || soyad === '' || numara === '' || departman === '') {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz', 'error')
+							return;
+						}
+						$.post("@Url.Action("AddPersonel", "Api")", {
+							Ad: ad,
+							Soyad: soyad,
+							DepartmanId: departman,
+							TelefonNo: numara
+						}, function(data, status) {
+							if (data.islem == false) {
+								Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+							} else if (data.islem == true) {
+								$('#example').DataTable().ajax.reload();
+								Swal.fire('Başarılı!', 'Sistem kullanıcısı başarıyla eklendi', 'success')
+							} else {
+								Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+							}
+						});
+					}
+				})
+			});
+		}
+
+		function detay(id) {
+			window.open("@Url.Action("Detay", "Yonetim")/"+id, "_blank");
+		}
+
+		function rapor(id) {
+			// yönlendirme yapılacak detay/id gibi
+			window.open("@Url.Action("Rapor", "Yonetim")/"+id, "_blank");
+
+		}
+
+		function sil(id) {
+			Swal.fire({
+				html: "Silmek istediğinizden emin misiniz?",
+				confirmButtonText: 'Sil',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.post("@Url.Action("DeletePersonel", "Api")", {
+							id: id
+						}, function(data, status) {
+							if (data.islem == false) {
+								Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+							} else if (data.islem == true) {
+								$('#example').DataTable().ajax.reload();
+								Swal.fire('Başarılı!', 'Sistem kullanıcısı başarıyla eklendi', 'success')
+							} else {
+								Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+							}
+						});
+				}
+			})
+		}
+
+		$(document).ready(function() {
+			$('#example').DataTable({
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json',
+				},
+				ajax: {
+					"url": "@Url.Action("GetPersoneller", "Api")",
+					"dataSrc": ""
+				},
+				dom: 'Bfrtip',
+				buttons: [
+					{
+						className: "btn btn-success",
+						text: 'Ekle',
+						action: function(e, dt, node, config) {
+							ekle();
+						},
+						init: function(api, node, config) {
+							$(node).removeClass('dt-button')
+						}
+					}
+				],
+				columns: [
+					{ "data": "personelId" },
+					{ "data": "ad" },
+					{ "data": "soyad" },
+					{ "data": "telefonNo" },
+					{ "data": "departmani.departmanAdi" },
+					{
+						render: function(data, type, row) {
+                            if (row.durumu == true) {
+								return 'Aktif'
+							}else{
+								return 'Pasif'
+							}
+						}
+					},
+					{
+						render: function(data, type, row) {
+							return '<button type="button" class="btn btn-warning" onclick="detay(' + row.personelId + ')">Detay</button> <button type="button" class="btn btn-info" onclick="rapor(' + row.personelId + ')">Rapor Al</button> <button type="button" class="btn btn-danger" onclick="sil(' + row.personelId + ')">Sil</button>';
+						}
+					}
+				]
+			});
+		});
+	</script>
+	}

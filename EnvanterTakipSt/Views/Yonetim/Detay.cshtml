@@ -1,0 +1,309 @@
+﻿@model EnvanterTakipSt.Models.PersonelDetayInputModel
+@{
+	ViewData["Title"] = "Detay";
+}
+<div class="pagetitle">
+	<h1>Sistem Kullanıcıları</h1>
+	<nav>
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item"><a href="anasayfa.html">Anasayfa</a></li>
+			<li class="breadcrumb-item active">Sistem Kullanıcıları</li>
+		</ol>
+	</nav>
+</div><!-- End Page Title -->
+<style>
+	.scroll-hide::-webkit-scrollbar {
+		display: none;
+	}
+</style>
+<section class="section dashboard">
+	<div class="row">
+
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title">X Personeli Bilgileri <button class="btn btn-info" style="float: right;" onclick="rapor(1)">Rapor Al</button></h5>
+
+				<!-- Default Tabs -->
+				<ul class="nav nav-tabs d-flex" id="myTabjustified" role="tablist">
+					<li class="nav-item flex-fill" role="presentation">
+						<button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-justified" type="button" role="tab" aria-controls="home" aria-selected="false" tabindex="-1">Detaylı Bilgiler</button>
+					</li>
+					<li class="nav-item flex-fill" role="presentation">
+						<button class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-justified" type="button" role="tab" aria-controls="profile" aria-selected="true">Zimmet Edilmiş Eşyalar</button>
+					</li>
+					<li class="nav-item flex-fill" role="presentation">
+						<button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-justified" type="button" role="tab" aria-controls="contact" aria-selected="false" tabindex="-1">Geçmiş</button>
+					</li>
+				</ul>
+				<div class="tab-content pt-2" id="myTabjustifiedContent">
+					<div class="tab-pane fade active show" id="home-justified" role="tabpanel" aria-labelledby="home-tab">
+
+						<div class="row">
+							<div class="col-lg-6">
+
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-2 col-form-label">Ad</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="ad" name="ad" value="@Model.Personel.Ad">
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-2 col-form-label">Telefon no</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="telefon" name="telefon" value="@Model.Personel.TelefonNo">
+										<input type="text" class="form-control" id="id" name="id" value="@Model.Personel.PersonelId" hidden>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-6">
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-2 col-form-label">Soyad</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="soyad" name="soyad" value="@Model.Personel.Soyad">
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-2 col-form-label">Departman</label>
+									<div class="col-sm-10">
+										<select class='form-select' id="departman" name="departman" asp-items="Model.Options"></select>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-6">
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-2 col-form-label">Çalışan Durumu</label>
+									<div class="col-sm-10">
+										<select class="form-select" id="calisma" name="calisma">
+											<!option value="true" @if(Model.Personel.Durumu == true){
+											<text>selected</text>
+											}>Çalışıyor</!option>
+											<!option value="false" @if(Model.Personel.Durumu == false){
+											<text>selected</text>
+											}>Çalışmıyor</!option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<button onclick="duzenle()" class="btn btn-primary">Düzenle</button>
+
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="profile-justified" role="tabpanel" aria-labelledby="profile-tab">
+						<table id="example" class="table" style="width:100%;">
+							<thead>
+								<tr>
+									<th>Id</th>
+									<th>Malzeme Adı</th>
+									<th>Veriliş Tarihi</th>
+									<th style="width: 15%;">İşlemler</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="tab-pane fade" id="contact-justified" role="tabpanel" aria-labelledby="contact-tab">
+						<span class="badge bg-info text-dark">En yeni işlem en yukarıda olacaktır.</span><hr />
+						<div class="accordion" id="accordionExample">
+							<div id="gecmisler" name="gecmisler"></div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+</section>
+
+@section Scripts
+	{
+	<script>
+		function rapor(id) {
+			window.open("@Url.Action("Rapor", "Yonetim")/"+id, "_blank");
+		}
+		function ekle() {
+			$.get("@Url.Action("GetMalzemeler", "Api")", function(data, status) {
+				var options = "<option value='' disabled selected>Malzeme Seçiniz</option>";
+				data.forEach(function(suan, index) {
+					options += "<option value='" + suan.malzemeId + "'>" + suan.malzemeAdi + "</option>"
+				})
+				var zaman = new Date().toISOString().substr(0, 10);
+				Swal.fire({
+					html: "<div class='col-sm-11'> <div class='row mb-12'><div class='col-sm-3'><label for='urunler'>Malzeme</label></div><div class='col-sm-9'><select name='urunler' id='urunler' class='form-select' style='width: 310px;margin-left: 4px;'>" + options + "</select></div></div><br/><div class='row mb-12'><div class='col-sm-3'><label for='eklenme'>Tarih: </label></div><div class='col-sm-9'><input type='date' min='2010-01-01' class='form-control' id='eklenme' name='eklenme' value='" + zaman + "' style='width: 310px;margin-left: 4px;'></div></div></div>",
+					confirmButtonText: 'Ekle',
+					denyButtonText: 'Vazgeç',
+					showDenyButton: true,
+				}).then((result) => {
+					if (result.isConfirmed) {
+						var urun = $('#urunler').val();
+						var eklenmeZamani = $('#eklenme').val();
+						var timestampEklenme = Date.parse(eklenmeZamani);
+						var personelId = @Model.Personel.PersonelId;
+						if (urun === null) {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz', 'error')
+							return;
+						}
+						$.post("@Url.Action("AddZimmet", "Api")", {
+							MalzemeId: urun,
+							PersonelId: personelId,
+							Timestamp: timestampEklenme,
+						}, function(data, status) {
+							if (data.islem == false) {
+								Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+							} else if (data.islem == true) {
+								$('#example').DataTable().ajax.reload();
+								Swal.fire('Başarılı!', 'Zimmet başarıyla verildi', 'success')
+							} else {
+								Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+							}
+						});
+					}
+				})
+			});
+		}
+
+		function kaldir(id) {
+			Swal.fire({
+				html: "Personelin malzemesini zimmetten geri almak istediğinize emin misiniz?",
+				confirmButtonText: 'Geri Al',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.post("@Url.Action("DeleteZimmet", "Api")", {
+						zimmetId: id
+					}, function(data, status) {
+						if (data.islem == false) {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+						} else if (data.islem == true) {
+							$('#example').DataTable().ajax.reload();
+							Swal.fire('Başarılı!', 'Zimmet başarıyla geri alındı', 'success')
+						} else {
+							Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+						}
+					});
+				}
+			})
+		}
+
+		function yenile(id) {
+			Swal.fire({
+				html: "Malzemenin veriliş tarihini bugün olarak güncellemek istediğinize emin misiniz?",
+				confirmButtonText: 'Yenile',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.post("@Url.Action("UpdateZimmetTime", "Api")", {
+						zimmetId: id
+					}, function(data, status) {
+						if (data.islem == false) {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+						} else if (data.islem == true) {
+							$('#example').DataTable().ajax.reload();
+							Swal.fire('Başarılı!', 'Zimmet başarıyla yenilendi', 'success')
+						} else {
+							Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+						}
+					});
+				}
+			})
+		}
+
+		function duzenle() {
+			var id = $('#id').val();
+			var ad = $('#ad').val();
+			var soyad = $('#soyad').val();
+			var telefon = $('#telefon').val();
+			var departman = $('#departman').val();
+			var calisma = $('#calisma').val();
+			Swal.fire({
+				html: "Güncellemek istediğinize emin misiniz?",
+				confirmButtonText: 'Güncelle',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.post("@Url.Action("EditPersonel", "Api")", {
+						Id: id,
+						Ad: ad,
+						Soyad: soyad,
+						DepartmanId: departman,
+						telefon: telefon,
+						durum: calisma
+					}, function(data, status) {
+						if (data.islem == false) {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+						} else if (data.islem == true) {
+							$('#example').DataTable().ajax.reload();
+							Swal.fire('Başarılı!', 'Personel başarıyla güncellendi', 'success')
+						} else {
+							Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+						}
+					});
+				}
+			})
+		}
+
+		$(document).ready(function() {
+
+			$.post("@Url.Action("GetGecmisler", "Api")", {
+				id: @Model.Personel.PersonelId}, function(data, status) {
+					var gecmis = "";
+					data.forEach(function(suan, index) {
+						var tarih = new Date(suan.gecmisZamani).toLocaleDateString('en-GB').slice(0, 10)
+						var islem = "";
+						var metin = ""
+						if (suan.islem == 0) {
+							islem = "yenilendi"
+							metin = "<strong>" + tarih + "</strong> tarihinde <code> " + suan.malzeme.malzemeAdi + " malzemesi</code>'nin veriliş süresi " +  new Date(suan.guncelTarihi).toLocaleDateString('en-GB').slice(0, 10) + " olarak yenilendi."
+						} else if (suan.islem == 1) {
+							islem = "zimmet edildi"
+							metin = "<strong>" + tarih + "</strong> tarihinde personele zimmet edildi."
+						} else if (suan.islem == 2) {
+							islem = "zimmet geri alındı"
+							metin = "<strong>" + tarih + "</strong> tarihinde personelden zimmet geri alındı."
+						}
+						gecmis += '<div class="accordion-item"> <h2 class="accordion-header" id="headingOne"> <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne' + suan.gecmisId + '" aria-expanded="false" aria-controls="collapseOne' + suan.gecmisId + '"> ' + suan.malzeme.malzemeAdi + ' Malzemesi ' + islem + ' </button> </h2> <div id="collapseOne' + suan.gecmisId + '" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample" style=""> <div class="accordion-body">' + metin + '</div> </div> </div>'
+					})
+					$("#gecmisler").html(gecmis);
+				});
+
+			$('#example').DataTable({
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json',
+				},
+				ajax: {
+					"url": "@Url.Action("GetZimmetler", "Api", new{ id = Model.Personel.PersonelId})",
+					"dataSrc": ""
+				},
+				dom: 'Bfrtip',
+				buttons: [
+					{
+						className: "btn btn-success",
+						text: 'Zimmet Ver',
+						action: function(e, dt, node, config) {
+							ekle();
+						},
+						init: function(api, node, config) {
+							$(node).removeClass('dt-button')
+						}
+					}
+				],
+				columns: [
+					{ "data": "zimmetId" },
+					{ "data": "malzeme.malzemeAdi" },
+					{
+						render: function(data, type, row) {
+							return new Date(row.zimmetTarihi).toLocaleDateString('en-GB').slice(0, 10)
+						}
+					},
+					{
+						render: function(data, type, row) {
+							return '<button type="button" class="btn btn-info" onclick="yenile(' + row.zimmetId + ')">Yenile</button> <button type="button" class="btn btn-danger" onclick="kaldir(' + row.zimmetId + ')">Geri Al</button>';
+						}
+					}
+				]
+			});
+		});
+	</script>
+  }

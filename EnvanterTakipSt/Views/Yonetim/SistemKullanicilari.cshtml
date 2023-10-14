@@ -1,0 +1,143 @@
+﻿@{
+	ViewData["Title"] = "Malzemeler";
+}
+<div class="pagetitle">
+	<h1>Sistem Kullanıcıları</h1>
+	<nav>
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item"><a href="anasayfa.html">Anasayfa</a></li>
+			<li class="breadcrumb-item active">Sistem Kullanıcıları</li>
+		</ol>
+	</nav>
+</div><!-- End Page Title -->
+
+<section class="section dashboard">
+	<div class="row">
+
+		<!-- Left side columns -->
+		<div class="col-lg-12">
+			<div class="row">
+				<div class="card">
+					<div class="card-body">
+						<table id="example" class="table" style="width:100%;">
+							<thead>
+								<tr>
+									<th>Id</th>
+									<th>Adı</th>
+									<th>Soyadı</th>
+									<th>Mail</th>
+									<th style="width: 10%;">İşlemler</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div><!-- End Left side columns -->
+
+	</div>
+</section>
+@section Scripts
+	{
+	<script>
+		function ekle() {
+			Swal.fire({
+				html: "<div class='col-sm-10'><input type='text' class='form-control' placeholder='Ad' id='ad' style='width: 454px;'><br><input type='text' class='form-control' placeholder='Soyad' id='soyad' style='width: 454px;'><br><input type='text' class='form-control' placeholder='Mail' id='mail' style='width: 454px;'><br><input type='password' class='form-control' placeholder='Şifre' id='sifre' style='width: 454px;'></div>",
+				confirmButtonText: 'Ekle',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					var ad = $('#ad').val();
+					var soyad = $('#soyad').val();
+					var mail = $('#mail').val();
+					var sifre = $('#sifre').val();
+					if (ad === '' || soyad === '' || mail === '' || sifre === '') {
+						Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz', 'error')
+						return;
+					}
+					if (validateEmail(mail)) {
+						$.post("@Url.Action("AddKullanici", "Api")", {
+							Email: mail,
+							Password: sifre,
+							Ad: ad,
+							Soyad: soyad
+						}, function(data, status) {
+							if (data.islem == false) {
+								Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz, sunucu hatası', 'error')
+							} else if (data.islem == true) {
+								$('#example').DataTable().ajax.reload();
+								Swal.fire('Başarılı!', 'Sistem kullanıcısı başarıyla eklendi', 'success')
+							} else {
+								Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+							}
+						});
+					} else {
+						Swal.fire('Hata!', 'Geçersiz mail adresi', 'error')
+					}
+
+				}
+			})
+		}
+
+		function sil(id) {
+			Swal.fire({
+				html: "Silmek istediğinizden emin misiniz?",
+				confirmButtonText: 'Sil',
+				denyButtonText: 'Vazgeç',
+				showDenyButton: true,
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.post("@Url.Action("DeleteKullanici", "Api")", {
+						id: id
+					}, function(data, status) {
+						if (data.islem == false) {
+							Swal.fire('Hata!', 'Lütfen bilgileri eksiksiz giriniz', 'error')
+						} else if (data.islem == true) {
+							$('#example').DataTable().ajax.reload();
+							Swal.fire('Başarılı!', 'Sistem kullanıcısı başarıyla silindi', 'success')
+						} else {
+							Swal.fire('Hata!', 'Bilinmeyen bir hata oluştu', 'error')
+						}
+					});
+				}
+			})
+		}
+
+		$(document).ready(function() {
+			$('#example').DataTable({
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json',
+				},
+				ajax: {
+					"url": "@Url.Action("GetSistemKullanicilari", "Api")",
+					"dataSrc": ""
+				},
+				dom: 'Bfrtip',
+				buttons: [
+					{
+						className: "btn btn-success",
+						text: 'Ekle',
+						action: function(e, dt, node, config) {
+							ekle();
+						},
+						init: function(api, node, config) {
+							$(node).removeClass('dt-button')
+						}
+					}
+				],
+				columns: [
+					{ "data": "id" },
+					{ "data": "ad" },
+					{ "data": "soyad" },
+					{ "data": "email" },
+					{
+						render: function(data, type, row) {
+							return '<button type="button" class="btn btn-danger" onclick="sil(\'' + row.id + '\')">Sil</button>';
+						}
+					}
+				]
+			});
+		});
+	</script>
+  }

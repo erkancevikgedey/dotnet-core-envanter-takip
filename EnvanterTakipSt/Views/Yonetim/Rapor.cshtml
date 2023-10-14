@@ -1,0 +1,172 @@
+﻿@model EnvanterTakipSt.EFModels.Personel
+@{
+	Layout = "";
+}
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+	<title>Personel Raporu</title>
+	<meta content="" name="description">
+	<meta content="" name="keywords">
+
+	<!-- Favicons -->
+	<link href="~/assets/img/favicon.png" rel="icon">
+	<link href="~/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+	<!-- Google Fonts -->
+	<link href="https://fonts.gstatic.com" rel="preconnect">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+	<!-- Vendor CSS Files -->
+	<link href="~/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+	<link href="~/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+	<link href="~/assets/vendor/quill/quill.snow.css" rel="stylesheet">
+	<link href="~/assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+	<link href="~/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+	<link href="~/assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+	<!-- Template Main CSS File -->
+	<link href="~/assets/css/style.css" rel="stylesheet">
+	<style>
+		body {
+			background: #ffffff;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<main>
+		<div class="container">
+
+			<section class="section error-404 min-vh-100 d-flex flex-column align-items-center">
+				<div class="col-12">
+					<div class="row">
+						<div class="col-6">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Personel Detayları</h5>
+									<p>Adı: <span id="ad">Yükleniyor...</span></p>
+									<p>Soyadı: <span id="soyad">Yükleniyor...</span></p>
+									<p>No: <span id="telefon">Yükleniyor...</span></p>
+								</div>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Zimmet Edilen Eşyalar</h5>
+									<!-- Default Table -->
+									<table class="table">
+										<thead>
+											<tr>
+												<th scope="col">Eşya</th>
+												<th scope="col">Veriliş Tarihi</th>
+											</tr>
+										</thead>
+										<tbody id="zimmet_tablosu">
+										</tbody>
+									</table>
+									<!-- End Default Table Example -->
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">İmza</h5>
+							<div class="row">
+								<div class="col-6">
+									<center>Yetkili İmza</center>
+									<div class="alert border-dark alert-dismissible fade show" role="alert" style="margin:10px;height:80px;">
+									</div>
+								</div>
+								<div class="col-6">
+									<center>Personel İmza</center>
+									<div class="alert border-dark alert-dismissible fade show" role="alert" style="margin:10px;height:80px;">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Zimmet Geçmişi</h5>
+							<!-- Default Table -->
+							<table class="table">
+								<thead>
+									<tr>
+										<th scope="col">İşlem</th>
+										<th scope="col">Detay</th>
+									</tr>
+								</thead>
+								<tbody id="gecmis">
+								</tbody>
+							</table>
+							<!-- End Default Table Example -->
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</main><!-- End #main -->
+	<!-- Vendor JS Files -->
+	<script src="~/assets/vendor/apexcharts/apexcharts.min.js"></script>
+	<script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<script src="~/assets/vendor/chart.js/chart.umd.js"></script>
+	<script src="~/assets/vendor/echarts/echarts.min.js"></script>
+	<script src="~/assets/vendor/quill/quill.min.js"></script>
+	<script src="~/assets/vendor/simple-datatables/simple-datatables.js"></script>
+	<script src="~/assets/vendor/tinymce/tinymce.min.js"></script>
+	<script src="~/assets/vendor/php-email-form/validate.js"></script>
+	<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+	<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<!-- Template Main JS File -->
+	<script src="~/assets/js/main.js"></script>
+	<script>
+		$(document).ready(function() {
+			$.post("@Url.Action("GetRapor", "Api")", {
+				id: @Model.PersonelId}, function(data, status) {
+					$("#ad").html(data.personel.ad)
+					$("#soyad").html(data.personel.soyad)
+					$("#telefon").html(data.personel.telefonNo)
+					var zimmet = ""
+					data.zimmetler.forEach(function(suan, index) {
+						var tarih = new Date(suan.zimmetTarihi).toLocaleDateString('en-GB').slice(0, 10);
+						zimmet += "<tr><td>" + suan.malzeme.malzemeAdi + "</td><td>" + tarih + "</td></tr>"
+					});
+					$("#zimmet_tablosu").html(zimmet)
+					var gecmis = ""
+					data.gecmis.forEach(function(suan, index) {
+						var tarih = new Date(suan.gecmisZamani).toLocaleDateString('en-GB').slice(0, 10);
+						var islem = "";
+						var metin = "";
+						if (suan.islem == 1) {
+							islem = "Zimmet verme";
+							metin = tarih + " tarihinde " + suan.malzeme.malzemeAdi + "malzemesi zimmet olarak verildi.";
+						} else if (suan.islem == 0) {
+							islem = "Zimmet Yenileme"
+							var guncellemeTarihi = new Date(suan.guncelTarihi).toLocaleDateString('en-GB').slice(0, 10);
+							metin = tarih + " tarihinde " + suan.malzeme.malzemeAdi + "malzemesinin zimmeti " + guncellemeTarihi + " tarihi olarak yenilendi.";
+						} else if (suan.islem == 2) {
+							islem = "Zimmetten geri alma"
+							metin = tarih + " tarihinde " + suan.malzeme.malzemeAdi + "malzemesinin zimmeti geri alındı.";
+						}
+						gecmis += "<tr><td>" + islem + "</td><td>" + metin + "</td></tr>"
+					});
+					$("#gecmis").html(gecmis)
+
+
+					//window.onload = function() { window.print(); }
+				});
+
+		});
+	</script>
+</body>
+</html>
